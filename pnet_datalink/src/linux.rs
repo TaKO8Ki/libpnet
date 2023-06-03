@@ -113,13 +113,13 @@ pub fn channel(network_interface: &NetworkInterface, config: Config) -> io::Resu
     let send_addr = (&addr as *const libc::sockaddr_storage) as *const libc::sockaddr;
 
     // Bind to interface
-    if unsafe { libc::bind(socket, send_addr, len as libc::socklen_t) } == -1 {
-        let err = io::Error::last_os_error();
-        unsafe {
-            pnet_sys::close(socket);
-        }
-        return Err(err);
-    }
+    // if unsafe { libc::bind(socket, send_addr, len as libc::socklen_t) } == -1 {
+    //     let err = io::Error::last_os_error();
+    //     unsafe {
+    //         pnet_sys::close(socket);
+    //     }
+    //     return Err(err);
+    // }
 
     let mut pmr: linux::packet_mreq = unsafe { mem::zeroed() };
     pmr.mr_ifindex = network_interface.index as i32;
