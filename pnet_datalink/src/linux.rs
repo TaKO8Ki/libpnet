@@ -122,9 +122,9 @@ pub fn channel(network_interface: &NetworkInterface, config: Config) -> io::Resu
     //     return Err(err);
     // }
 
-    let mut pmr: linux::packet_mreq = unsafe { mem::zeroed() };
-    pmr.mr_ifindex = network_interface.index as i32;
-    pmr.mr_type = linux::PACKET_MR_PROMISC as u16;
+    // let mut pmr: linux::packet_mreq = unsafe { mem::zeroed() };
+    // pmr.mr_ifindex = network_interface.index as i32;
+    // pmr.mr_type = linux::PACKET_MR_PROMISC as u16;
 
     // Enable promiscuous capture
     println!("Enable promiscuous capture");

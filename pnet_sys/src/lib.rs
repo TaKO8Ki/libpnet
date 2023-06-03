@@ -43,7 +43,7 @@ pub fn send_to(
     dst: *const SockAddr,
     slen: SockLen,
 ) -> io::Result<usize> {
-    let send_len = imp::retry(&mut || unsafe {
+    let send_len = unsafe {
         imp::sendto(
             socket,
             buffer.as_ptr() as Buf,
@@ -52,7 +52,7 @@ pub fn send_to(
             dst,
             slen,
         )
-    });
+    };
 
     if send_len < 0 {
         Err(io::Error::last_os_error())
@@ -67,7 +67,7 @@ pub fn recv_from(
     caddr: *mut SockAddrStorage,
 ) -> io::Result<usize> {
     let mut caddrlen = mem::size_of::<SockAddrStorage>() as SockLen;
-    let len = imp::retry(&mut || unsafe {
+    let len = unsafe {
         imp::recvfrom(
             socket,
             buffer.as_ptr() as MutBuf,
@@ -76,7 +76,7 @@ pub fn recv_from(
             caddr as *mut SockAddr,
             &mut caddrlen,
         )
-    });
+    };
 
     if len < 0 {
         Err(io::Error::last_os_error())
@@ -160,10 +160,10 @@ mod tests {
     use crate::get_socket_receive_timeout;
     use crate::recv_from;
     use crate::set_socket_receive_timeout;
-    use std::mem;
-    use std::time::{Duration, Instant};
     use crate::CSocket;
     use crate::SockAddrStorage;
+    use std::mem;
+    use std::time::{Duration, Instant};
 
     fn test_timeout(socket: CSocket) -> Duration {
         let mut buffer = [0u8; 1024];
