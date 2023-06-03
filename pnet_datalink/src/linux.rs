@@ -189,13 +189,13 @@ pub fn channel(network_interface: &NetworkInterface, config: Config) -> io::Resu
     }
 
     // Enable nonblocking
-    if unsafe { libc::fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK) } == -1 {
-        let err = io::Error::last_os_error();
-        unsafe {
-            pnet_sys::close(socket);
-        }
-        return Err(err);
-    }
+    // if unsafe { libc::fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK) } == -1 {
+    //     let err = io::Error::last_os_error();
+    //     unsafe {
+    //         pnet_sys::close(socket);
+    //     }
+    //     return Err(err);
+    // }
 
     let fd = Arc::new(pnet_sys::FileDesc { fd: socket });
     let sender = Box::new(DataLinkSenderImpl {
@@ -313,34 +313,34 @@ impl DataLinkSender for DataLinkSenderImpl {
             libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
             libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
         }
-        let ret = unsafe {
-            libc::pselect(
-                self.socket.fd + 1,
-                ptr::null_mut(),
-                &mut self.fd_set as *mut libc::fd_set,
-                ptr::null_mut(),
-                self.timeout
-                    .as_ref()
-                    .map(|to| to as *const libc::timespec)
-                    .unwrap_or(ptr::null()),
-                ptr::null(),
-            )
-        };
-        if ret == -1 {
-            Some(Err(io::Error::last_os_error()))
-        } else if ret == 0 {
-            Some(Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out")))
-        } else {
-            match pnet_sys::send_to(
-                self.socket.fd,
-                packet,
-                (&self.send_addr as *const libc::sockaddr_ll) as *const _,
-                self.send_addr_len as libc::socklen_t,
-            ) {
-                Err(e) => Some(Err(e)),
-                Ok(_) => Some(Ok(())),
-            }
+        // let ret = unsafe {
+        //     libc::pselect(
+        //         self.socket.fd + 1,
+        //         ptr::null_mut(),
+        //         &mut self.fd_set as *mut libc::fd_set,
+        //         ptr::null_mut(),
+        //         self.timeout
+        //             .as_ref()
+        //             .map(|to| to as *const libc::timespec)
+        //             .unwrap_or(ptr::null()),
+        //         ptr::null(),
+        //     )
+        // };
+        // if ret == -1 {
+        //     Some(Err(io::Error::last_os_error()))
+        // } else if ret == 0 {
+        //     Some(Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out")))
+        // } else {
+        match pnet_sys::send_to(
+            self.socket.fd,
+            packet,
+            (&self.send_addr as *const libc::sockaddr_ll) as *const _,
+            self.send_addr_len as libc::socklen_t,
+        ) {
+            Err(e) => Some(Err(e)),
+            Ok(_) => Some(Ok(())),
         }
+        // }
     }
 }
 
