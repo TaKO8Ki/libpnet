@@ -113,6 +113,7 @@ pub fn channel(network_interface: &NetworkInterface, config: Config) -> io::Resu
     let send_addr = (&addr as *const libc::sockaddr_storage) as *const libc::sockaddr;
 
     // Bind to interface
+    println!("Bind to interface typ={}, proto={}", typ, proto);
     // if unsafe { libc::bind(socket, send_addr, len as libc::socklen_t) } == -1 {
     //     let err = io::Error::last_os_error();
     //     unsafe {
