@@ -341,6 +341,7 @@ impl DataLinkSender for DataLinkSenderImpl {
             self.send_addr_len as libc::socklen_t,
         ) {
             Err(e) => Some(Err(e)),
+
             Ok(count) => {
                 println!("count={}", count);
                 Some(Ok(()))
@@ -361,34 +362,34 @@ struct DataLinkReceiverImpl {
 impl DataLinkReceiver for DataLinkReceiverImpl {
     fn next(&mut self) -> io::Result<&[u8]> {
         let mut caddr: libc::sockaddr_storage = unsafe { mem::zeroed() };
-        unsafe {
-            libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
-            libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
+        // unsafe {
+        //     libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
+        //     libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
+        // }
+        // let ret = unsafe {
+        //     libc::pselect(
+        //         self.socket.fd + 1,
+        //         &mut self.fd_set as *mut libc::fd_set,
+        //         ptr::null_mut(),
+        //         ptr::null_mut(),
+        //         self.timeout
+        //             .as_ref()
+        //             .map(|to| to as *const libc::timespec)
+        //             .unwrap_or(ptr::null()),
+        //         ptr::null(),
+        //     )
+        // };
+        // if ret == -1 {
+        //     Err(io::Error::last_os_error())
+        // } else if ret == 0 {
+        //     Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out"))
+        // } else {
+        let res = pnet_sys::recv_from(self.socket.fd, &mut self.read_buffer, &mut caddr);
+        match res {
+            Ok(len) => Ok(&self.read_buffer[0..len]),
+            Err(e) => Err(e),
         }
-        let ret = unsafe {
-            libc::pselect(
-                self.socket.fd + 1,
-                &mut self.fd_set as *mut libc::fd_set,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                self.timeout
-                    .as_ref()
-                    .map(|to| to as *const libc::timespec)
-                    .unwrap_or(ptr::null()),
-                ptr::null(),
-            )
-        };
-        if ret == -1 {
-            Err(io::Error::last_os_error())
-        } else if ret == 0 {
-            Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out"))
-        } else {
-            let res = pnet_sys::recv_from(self.socket.fd, &mut self.read_buffer, &mut caddr);
-            match res {
-                Ok(len) => Ok(&self.read_buffer[0..len]),
-                Err(e) => Err(e),
-            }
-        }
+        // }
     }
 }
 
