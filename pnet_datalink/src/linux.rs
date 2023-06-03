@@ -309,10 +309,10 @@ impl DataLinkSender for DataLinkSenderImpl {
             self.send_addr.sll_halen,
             self.send_addr.sll_addr,
         );
-        unsafe {
-            libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
-            libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
-        }
+        // unsafe {
+        //     libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
+        //     libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
+        // }
         // let ret = unsafe {
         //     libc::pselect(
         //         self.socket.fd + 1,
