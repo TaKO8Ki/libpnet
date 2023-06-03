@@ -126,67 +126,69 @@ pub fn channel(network_interface: &NetworkInterface, config: Config) -> io::Resu
     pmr.mr_type = linux::PACKET_MR_PROMISC as u16;
 
     // Enable promiscuous capture
-    if config.promiscuous {
-        if unsafe {
-            libc::setsockopt(
-                socket,
-                linux::SOL_PACKET,
-                linux::PACKET_ADD_MEMBERSHIP,
-                (&pmr as *const linux::packet_mreq) as *const libc::c_void,
-                mem::size_of::<linux::packet_mreq>() as libc::socklen_t,
-            )
-        } == -1
-        {
-            let err = io::Error::last_os_error();
-            unsafe {
-                pnet_sys::close(socket);
-            }
-            return Err(err);
-        }
-    }
+    println!("Enable promiscuous capture");
+    // if config.promiscuous {
+    //     if unsafe {
+    //         libc::setsockopt(
+    //             socket,
+    //             linux::SOL_PACKET,
+    //             linux::PACKET_ADD_MEMBERSHIP,
+    //             (&pmr as *const linux::packet_mreq) as *const libc::c_void,
+    //             mem::size_of::<linux::packet_mreq>() as libc::socklen_t,
+    //         )
+    //     } == -1
+    //     {
+    //         let err = io::Error::last_os_error();
+    //         unsafe {
+    //             pnet_sys::close(socket);
+    //         }
+    //         return Err(err);
+    //     }
+    // }
 
     // Enable packet fanout
-    if let Some(fanout) = config.fanout {
-        use super::FanoutType;
-        let mut typ = match fanout.fanout_type {
-            FanoutType::HASH => linux::PACKET_FANOUT_HASH,
-            FanoutType::LB => linux::PACKET_FANOUT_LB,
-            FanoutType::CPU => linux::PACKET_FANOUT_CPU,
-            FanoutType::ROLLOVER => linux::PACKET_FANOUT_ROLLOVER,
-            FanoutType::RND => linux::PACKET_FANOUT_RND,
-            FanoutType::QM => linux::PACKET_FANOUT_QM,
-            FanoutType::CBPF => linux::PACKET_FANOUT_CBPF,
-            FanoutType::EBPF => linux::PACKET_FANOUT_EBPF,
-        } as u32;
-        // set defrag flag
-        if fanout.defrag {
-            typ = typ | linux::PACKET_FANOUT_FLAG_DEFRAG;
-        }
-        // set rollover flag
-        if fanout.rollover {
-            typ = typ | linux::PACKET_FANOUT_FLAG_ROLLOVER;
-        }
-        // set uniqueid flag -- probably not needed atm..
-        // PACKET_FANOUT_FLAG_UNIQUEID -- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4a69a864209e9ab436d4a58e8028ac96cc873d15
-        let arg: libc::c_uint = fanout.group_id as u32 | (typ << 16);
+    println!("Enable packet fanout");
+    // if let Some(fanout) = config.fanout {
+    //     use super::FanoutType;
+    //     let mut typ = match fanout.fanout_type {
+    //         FanoutType::HASH => linux::PACKET_FANOUT_HASH,
+    //         FanoutType::LB => linux::PACKET_FANOUT_LB,
+    //         FanoutType::CPU => linux::PACKET_FANOUT_CPU,
+    //         FanoutType::ROLLOVER => linux::PACKET_FANOUT_ROLLOVER,
+    //         FanoutType::RND => linux::PACKET_FANOUT_RND,
+    //         FanoutType::QM => linux::PACKET_FANOUT_QM,
+    //         FanoutType::CBPF => linux::PACKET_FANOUT_CBPF,
+    //         FanoutType::EBPF => linux::PACKET_FANOUT_EBPF,
+    //     } as u32;
+    //     // set defrag flag
+    //     if fanout.defrag {
+    //         typ = typ | linux::PACKET_FANOUT_FLAG_DEFRAG;
+    //     }
+    //     // set rollover flag
+    //     if fanout.rollover {
+    //         typ = typ | linux::PACKET_FANOUT_FLAG_ROLLOVER;
+    //     }
+    //     // set uniqueid flag -- probably not needed atm..
+    //     // PACKET_FANOUT_FLAG_UNIQUEID -- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4a69a864209e9ab436d4a58e8028ac96cc873d15
+    //     let arg: libc::c_uint = fanout.group_id as u32 | (typ << 16);
 
-        if unsafe {
-            libc::setsockopt(
-                socket,
-                linux::SOL_PACKET,
-                linux::PACKET_FANOUT,
-                (&arg as *const libc::c_uint) as *const libc::c_void,
-                mem::size_of::<libc::c_uint>() as libc::socklen_t,
-            )
-        } == -1
-        {
-            let err = io::Error::last_os_error();
-            unsafe {
-                pnet_sys::close(socket);
-            }
-            return Err(err);
-        }
-    }
+    //     if unsafe {
+    //         libc::setsockopt(
+    //             socket,
+    //             linux::SOL_PACKET,
+    //             linux::PACKET_FANOUT,
+    //             (&arg as *const libc::c_uint) as *const libc::c_void,
+    //             mem::size_of::<libc::c_uint>() as libc::socklen_t,
+    //         )
+    //     } == -1
+    //     {
+    //         let err = io::Error::last_os_error();
+    //         unsafe {
+    //             pnet_sys::close(socket);
+    //         }
+    //         return Err(err);
+    //     }
+    // }
 
     // Enable nonblocking
     // if unsafe { libc::fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK) } == -1 {
