@@ -341,7 +341,10 @@ impl DataLinkSender for DataLinkSenderImpl {
             self.send_addr_len as libc::socklen_t,
         ) {
             Err(e) => Some(Err(e)),
-            Ok(_) => Some(Ok(())),
+            Ok(count) => {
+                println!("count={}", count);
+                Some(Ok(()))
+            }
         }
         // }
     }
