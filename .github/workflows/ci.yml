@@ -69,3 +69,15 @@ jobs:
 
     - name: Build and test
       run: cargo test --verbose --features "appveyor serde"
+
+  run-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: Swatinem/rust-cache@v2
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libpcap-dev
+
+    - run: cargo build
+    - run: sudo cargo run --example arp_packet eth0 192.168.0.17

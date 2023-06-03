@@ -113,89 +113,92 @@ pub fn channel(network_interface: &NetworkInterface, config: Config) -> io::Resu
     let send_addr = (&addr as *const libc::sockaddr_storage) as *const libc::sockaddr;
 
     // Bind to interface
-    if unsafe { libc::bind(socket, send_addr, len as libc::socklen_t) } == -1 {
-        let err = io::Error::last_os_error();
-        unsafe {
-            pnet_sys::close(socket);
-        }
-        return Err(err);
-    }
+    println!("Bind to interface typ={}, proto={}", typ, proto);
+    // if unsafe { libc::bind(socket, send_addr, len as libc::socklen_t) } == -1 {
+    //     let err = io::Error::last_os_error();
+    //     unsafe {
+    //         pnet_sys::close(socket);
+    //     }
+    //     return Err(err);
+    // }
 
-    let mut pmr: linux::packet_mreq = unsafe { mem::zeroed() };
-    pmr.mr_ifindex = network_interface.index as i32;
-    pmr.mr_type = linux::PACKET_MR_PROMISC as u16;
+    // let mut pmr: linux::packet_mreq = unsafe { mem::zeroed() };
+    // pmr.mr_ifindex = network_interface.index as i32;
+    // pmr.mr_type = linux::PACKET_MR_PROMISC as u16;
 
     // Enable promiscuous capture
-    if config.promiscuous {
-        if unsafe {
-            libc::setsockopt(
-                socket,
-                linux::SOL_PACKET,
-                linux::PACKET_ADD_MEMBERSHIP,
-                (&pmr as *const linux::packet_mreq) as *const libc::c_void,
-                mem::size_of::<linux::packet_mreq>() as libc::socklen_t,
-            )
-        } == -1
-        {
-            let err = io::Error::last_os_error();
-            unsafe {
-                pnet_sys::close(socket);
-            }
-            return Err(err);
-        }
-    }
+    println!("Enable promiscuous capture");
+    // if config.promiscuous {
+    //     if unsafe {
+    //         libc::setsockopt(
+    //             socket,
+    //             linux::SOL_PACKET,
+    //             linux::PACKET_ADD_MEMBERSHIP,
+    //             (&pmr as *const linux::packet_mreq) as *const libc::c_void,
+    //             mem::size_of::<linux::packet_mreq>() as libc::socklen_t,
+    //         )
+    //     } == -1
+    //     {
+    //         let err = io::Error::last_os_error();
+    //         unsafe {
+    //             pnet_sys::close(socket);
+    //         }
+    //         return Err(err);
+    //     }
+    // }
 
     // Enable packet fanout
-    if let Some(fanout) = config.fanout {
-        use super::FanoutType;
-        let mut typ = match fanout.fanout_type {
-            FanoutType::HASH => linux::PACKET_FANOUT_HASH,
-            FanoutType::LB => linux::PACKET_FANOUT_LB,
-            FanoutType::CPU => linux::PACKET_FANOUT_CPU,
-            FanoutType::ROLLOVER => linux::PACKET_FANOUT_ROLLOVER,
-            FanoutType::RND => linux::PACKET_FANOUT_RND,
-            FanoutType::QM => linux::PACKET_FANOUT_QM,
-            FanoutType::CBPF => linux::PACKET_FANOUT_CBPF,
-            FanoutType::EBPF => linux::PACKET_FANOUT_EBPF,
-        } as u32;
-        // set defrag flag
-        if fanout.defrag {
-            typ = typ | linux::PACKET_FANOUT_FLAG_DEFRAG;
-        }
-        // set rollover flag
-        if fanout.rollover {
-            typ = typ | linux::PACKET_FANOUT_FLAG_ROLLOVER;
-        }
-        // set uniqueid flag -- probably not needed atm..
-        // PACKET_FANOUT_FLAG_UNIQUEID -- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4a69a864209e9ab436d4a58e8028ac96cc873d15
-        let arg: libc::c_uint = fanout.group_id as u32 | (typ << 16);
+    println!("Enable packet fanout");
+    // if let Some(fanout) = config.fanout {
+    //     use super::FanoutType;
+    //     let mut typ = match fanout.fanout_type {
+    //         FanoutType::HASH => linux::PACKET_FANOUT_HASH,
+    //         FanoutType::LB => linux::PACKET_FANOUT_LB,
+    //         FanoutType::CPU => linux::PACKET_FANOUT_CPU,
+    //         FanoutType::ROLLOVER => linux::PACKET_FANOUT_ROLLOVER,
+    //         FanoutType::RND => linux::PACKET_FANOUT_RND,
+    //         FanoutType::QM => linux::PACKET_FANOUT_QM,
+    //         FanoutType::CBPF => linux::PACKET_FANOUT_CBPF,
+    //         FanoutType::EBPF => linux::PACKET_FANOUT_EBPF,
+    //     } as u32;
+    //     // set defrag flag
+    //     if fanout.defrag {
+    //         typ = typ | linux::PACKET_FANOUT_FLAG_DEFRAG;
+    //     }
+    //     // set rollover flag
+    //     if fanout.rollover {
+    //         typ = typ | linux::PACKET_FANOUT_FLAG_ROLLOVER;
+    //     }
+    //     // set uniqueid flag -- probably not needed atm..
+    //     // PACKET_FANOUT_FLAG_UNIQUEID -- https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4a69a864209e9ab436d4a58e8028ac96cc873d15
+    //     let arg: libc::c_uint = fanout.group_id as u32 | (typ << 16);
 
-        if unsafe {
-            libc::setsockopt(
-                socket,
-                linux::SOL_PACKET,
-                linux::PACKET_FANOUT,
-                (&arg as *const libc::c_uint) as *const libc::c_void,
-                mem::size_of::<libc::c_uint>() as libc::socklen_t,
-            )
-        } == -1
-        {
-            let err = io::Error::last_os_error();
-            unsafe {
-                pnet_sys::close(socket);
-            }
-            return Err(err);
-        }
-    }
+    //     if unsafe {
+    //         libc::setsockopt(
+    //             socket,
+    //             linux::SOL_PACKET,
+    //             linux::PACKET_FANOUT,
+    //             (&arg as *const libc::c_uint) as *const libc::c_void,
+    //             mem::size_of::<libc::c_uint>() as libc::socklen_t,
+    //         )
+    //     } == -1
+    //     {
+    //         let err = io::Error::last_os_error();
+    //         unsafe {
+    //             pnet_sys::close(socket);
+    //         }
+    //         return Err(err);
+    //     }
+    // }
 
     // Enable nonblocking
-    if unsafe { libc::fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK) } == -1 {
-        let err = io::Error::last_os_error();
-        unsafe {
-            pnet_sys::close(socket);
-        }
-        return Err(err);
-    }
+    // if unsafe { libc::fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK) } == -1 {
+    //     let err = io::Error::last_os_error();
+    //     unsafe {
+    //         pnet_sys::close(socket);
+    //     }
+    //     return Err(err);
+    // }
 
     let fd = Arc::new(pnet_sys::FileDesc { fd: socket });
     let sender = Box::new(DataLinkSenderImpl {
@@ -291,38 +294,60 @@ impl DataLinkSender for DataLinkSenderImpl {
 
     #[inline]
     fn send_to(&mut self, packet: &[u8], _dst: Option<NetworkInterface>) -> Option<io::Result<()>> {
-        unsafe {
-            libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
-            libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
-        }
-        let ret = unsafe {
-            libc::pselect(
-                self.socket.fd + 1,
-                ptr::null_mut(),
-                &mut self.fd_set as *mut libc::fd_set,
-                ptr::null_mut(),
-                self.timeout
-                    .as_ref()
-                    .map(|to| to as *const libc::timespec)
-                    .unwrap_or(ptr::null()),
-                ptr::null(),
-            )
-        };
-        if ret == -1 {
-            Some(Err(io::Error::last_os_error()))
-        } else if ret == 0 {
-            Some(Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out")))
-        } else {
-            match pnet_sys::send_to(
-                self.socket.fd,
-                packet,
-                (&self.send_addr as *const libc::sockaddr_ll) as *const _,
-                self.send_addr_len as libc::socklen_t,
-            ) {
-                Err(e) => Some(Err(e)),
-                Ok(_) => Some(Ok(())),
+        println!(
+            "
+            self.send_addr.sll_family={},
+            self.send_addr.sll_protocol={},
+            self.send_addr.sll_ifindex={},
+            self.send_addr.sll_hatype={},
+            self.send_addr.sll_pkttype={},
+            self.send_addr.sll_halen={},
+            self.send_addr.sll_addr={:?},
+            ",
+            self.send_addr.sll_family,
+            self.send_addr.sll_protocol,
+            self.send_addr.sll_ifindex,
+            self.send_addr.sll_hatype,
+            self.send_addr.sll_pkttype,
+            self.send_addr.sll_halen,
+            self.send_addr.sll_addr,
+        );
+        // unsafe {
+        //     libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
+        //     libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
+        // }
+        // let ret = unsafe {
+        //     libc::pselect(
+        //         self.socket.fd + 1,
+        //         ptr::null_mut(),
+        //         &mut self.fd_set as *mut libc::fd_set,
+        //         ptr::null_mut(),
+        //         self.timeout
+        //             .as_ref()
+        //             .map(|to| to as *const libc::timespec)
+        //             .unwrap_or(ptr::null()),
+        //         ptr::null(),
+        //     )
+        // };
+        // if ret == -1 {
+        //     Some(Err(io::Error::last_os_error()))
+        // } else if ret == 0 {
+        //     Some(Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out")))
+        // } else {
+        match pnet_sys::send_to(
+            self.socket.fd,
+            packet,
+            (&self.send_addr as *const libc::sockaddr_ll) as *const _,
+            self.send_addr_len as libc::socklen_t,
+        ) {
+            Err(e) => Some(Err(e)),
+
+            Ok(count) => {
+                println!("count={}", count);
+                Some(Ok(()))
             }
         }
+        // }
     }
 }
 
@@ -337,34 +362,34 @@ struct DataLinkReceiverImpl {
 impl DataLinkReceiver for DataLinkReceiverImpl {
     fn next(&mut self) -> io::Result<&[u8]> {
         let mut caddr: libc::sockaddr_storage = unsafe { mem::zeroed() };
-        unsafe {
-            libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
-            libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
+        // unsafe {
+        //     libc::FD_ZERO(&mut self.fd_set as *mut libc::fd_set);
+        //     libc::FD_SET(self.socket.fd, &mut self.fd_set as *mut libc::fd_set);
+        // }
+        // let ret = unsafe {
+        //     libc::pselect(
+        //         self.socket.fd + 1,
+        //         &mut self.fd_set as *mut libc::fd_set,
+        //         ptr::null_mut(),
+        //         ptr::null_mut(),
+        //         self.timeout
+        //             .as_ref()
+        //             .map(|to| to as *const libc::timespec)
+        //             .unwrap_or(ptr::null()),
+        //         ptr::null(),
+        //     )
+        // };
+        // if ret == -1 {
+        //     Err(io::Error::last_os_error())
+        // } else if ret == 0 {
+        //     Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out"))
+        // } else {
+        let res = pnet_sys::recv_from(self.socket.fd, &mut self.read_buffer, &mut caddr);
+        match res {
+            Ok(len) => Ok(&self.read_buffer[0..len]),
+            Err(e) => Err(e),
         }
-        let ret = unsafe {
-            libc::pselect(
-                self.socket.fd + 1,
-                &mut self.fd_set as *mut libc::fd_set,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                self.timeout
-                    .as_ref()
-                    .map(|to| to as *const libc::timespec)
-                    .unwrap_or(ptr::null()),
-                ptr::null(),
-            )
-        };
-        if ret == -1 {
-            Err(io::Error::last_os_error())
-        } else if ret == 0 {
-            Err(io::Error::new(io::ErrorKind::TimedOut, "Timed out"))
-        } else {
-            let res = pnet_sys::recv_from(self.socket.fd, &mut self.read_buffer, &mut caddr);
-            match res {
-                Ok(len) => Ok(&self.read_buffer[0..len]),
-                Err(e) => Err(e),
-            }
-        }
+        // }
     }
 }
 
